@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
-    <shortcut
-        android:shortcutId="app_settings"
-        android:enabled="true"
-        android:icon="@drawable/ic_settings"
-        android:shortcutShortLabel="@string/title_activity_settings"
-        android:shortcutLongLabel="@string/title_activity_settings">
-        <intent
-            android:action="android.intent.action.VIEW"
-            android:targetPackage="com.parallelc.micts"
-            android:targetClass="com.parallelc.micts.ui.activity.SettingsActivity" />
+    <shortcut android:shortcutId="circle_search" android:enabled="true"
+        android:icon="@drawable/ic_tile_service" android:shortcutShortLabel="@string/tile_label">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dev.valohalo.samsungcts"
+            android:targetClass="com.parallelc.micts.ui.activity.MainActivity" />
     </shortcut>
 </shortcuts>

@@ -1,91 +1,42 @@
-# MiCTS
+# SamsungCTS
 
-[![Stars](https://img.shields.io/github/stars/parallelcc/MiCTS)](https://github.com/parallelcc/MiCTS) [![Downloads](https://img.shields.io/github/downloads/parallelcc/MiCTS/total)](https://github.com/parallelcc/MiCTS/releases) [![Release](https://img.shields.io/github/v/release/parallelcc/MiCTS)](https://github.com/parallelcc/MiCTS/releases/latest)  [![DeepWiki](https://img.shields.io/badge/DeepWiki-parallelcc%2FMiCTS-blue.svg?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAyCAYAAAAnWDnqAAAAAXNSR0IArs4c6QAAA05JREFUaEPtmUtyEzEQhtWTQyQLHNak2AB7ZnyXZMEjXMGeK/AIi+QuHrMnbChYY7MIh8g01fJoopFb0uhhEqqcbWTp06/uv1saEDv4O3n3dV60RfP947Mm9/SQc0ICFQgzfc4CYZoTPAswgSJCCUJUnAAoRHOAUOcATwbmVLWdGoH//PB8mnKqScAhsD0kYP3j/Yt5LPQe2KvcXmGvRHcDnpxfL2zOYJ1mFwrryWTz0advv1Ut4CJgf5uhDuDj5eUcAUoahrdY/56ebRWeraTjMt/00Sh3UDtjgHtQNHwcRGOC98BJEAEymycmYcWwOprTgcB6VZ5JK5TAJ+fXGLBm3FDAmn6oPPjR4rKCAoJCal2eAiQp2x0vxTPB3ALO2CRkwmDy5WohzBDwSEFKRwPbknEggCPB/imwrycgxX2NzoMCHhPkDwqYMr9tRcP5qNrMZHkVnOjRMWwLCcr8ohBVb1OMjxLwGCvjTikrsBOiA6fNyCrm8V1rP93iVPpwaE+gO0SsWmPiXB+jikdf6SizrT5qKasx5j8ABbHpFTx+vFXp9EnYQmLx02h1QTTrl6eDqxLnGjporxl3NL3agEvXdT0WmEost648sQOYAeJS9Q7bfUVoMGnjo4AZdUMQku50McDcMWcBPvr0SzbTAFDfvJqwLzgxwATnCgnp4wDl6Aa+Ax283gghmj+vj7feE2KBBRMW3FzOpLOADl0Isb5587h/U4gGvkt5v60Z1VLG8BhYjbzRwyQZemwAd6cCR5/XFWLYZRIMpX39AR0tjaGGiGzLVyhse5C9RKC6ai42ppWPKiBagOvaYk8lO7DajerabOZP46Lby5wKjw1HCRx7p9sVMOWGzb/vA1hwiWc6jm3MvQDTogQkiqIhJV0nBQBTU+3okKCFDy9WwferkHjtxib7t3xIUQtHxnIwtx4mpg26/HfwVNVDb4oI9RHmx5WGelRVlrtiw43zboCLaxv46AZeB3IlTkwouebTr1y2NjSpHz68WNFjHvupy3q8TFn3Hos2IAk4Ju5dCo8B3wP7VPr/FGaKiG+T+v+TQqIrOqMTL1VdWV1DdmcbO8KXBz6esmYWYKPwDL5b5FA1a0hwapHiom0r/cKaoqr+27/XcrS5UwSMbQAAAABJRU5ErkJggg==)](https://deepwiki.com/parallelcc/MiCTS)
+[简体中文](README.md)
 
-[简体中文](/README.md)&nbsp;&nbsp;|&nbsp;&nbsp;English&nbsp;&nbsp;|&nbsp;&nbsp;[Русский](/README_ru.md)&nbsp;&nbsp;|&nbsp;&nbsp;[Türkçe](/README_tr.md)&nbsp;&nbsp;|&nbsp;&nbsp;[فارسی](/README_fa.md)
+A rootless Google Circle to Search companion for Samsung One UI, derived from [parallelcc/MiCTS](https://github.com/parallelcc/MiCTS), licensed under GPL-3.0.
 
-Trigger Circle to Search on any Android 9–16 device
+SamsungCTS configures the bottom-corner assistant gesture and restores it after startup unlock. Google provides the search UI. SamsungCTS has no network access, screen-reading capability or persistent service.
 
-*This app only aims to trigger Circle to Search and cannot handle issues that may occur after triggering successfully*
+## Setup
 
-## How to Use
+1. Install/update Google and select it as the default digital assistant. Confirm Samsung's first-use assistant chooser.
+2. Install SamsungCTS, enable USB debugging, and grant the setting permission once:
 
-1. Install the latest version of [Google](https://play.google.com/store/apps/details?id=com.google.android.googlequicksearchbox), enable auto-start, disable background restrictions, and set Google as the default assistant app
+   ```sh
+   adb shell pm grant dev.valohalo.samsungcts android.permission.WRITE_SECURE_SETTINGS
+   ```
 
+3. Set SamsungCTS to **Unrestricted** in App info → Battery / Background activity, including the confirmation dialog. Restricted background mode can cause Samsung to skip boot broadcasts.
+4. Use swipe gesture navigation, then select **Enable corner gesture** in SamsungCTS.
+5. Swipe inward from either bottom corner, use the quick settings tile, or long-press the app icon. The center navigation-bar hold retains its original behavior.
 
-2. Install and launch MiCTS
-   - If you're lucky, Circle to Search will be triggered directly without root when launching MiCTS
-   - If nothing happened, most likely it's because Google disabled Circle to Search for your device (you can confirm by checking the message `Omni invocation failed: not enabled` in Logcat). Try the following **with root**:
-     - Activate the module in LSPosed, enable `Device spoof for Google` in the [MiCTS settings](#how-to-enter-settings), and force restart Google
-     - If it still doesn't work, then change `com.google.android.apps.search.omnient.device` flag `45631784` to true using [GMS-Flags](https://github.com/polodarb/GMS-Flags)
+If an older standalone gesture helper is installed, restore its original settings first. SamsungCTS does not require the original MiCTS app. Restore original settings before uninstalling.
 
+## Scope and implementation
 
-3. Set up the trigger method
-   - Launching MiCTS will trigger, so you can use other apps like Quick Ball, Xposed Edge, ShortX, etc., set launching MiCTS as the action to customize the trigger method
-   - MiCTS provides a trigger tile, so you can add it to the Quick Settings panel and trigger by clicking it
-   - For Xiaomi devices, MiCTS has built-in support for `Trigger by long press gesture handle` and `Trigger by long press home button`, which can be enabled in the MiCTS settings (need to activate the module and restart the phone after installing MiCTS)
-   - For Samsung devices running Android 13 and above, you can download and install "Routines+" from the [Galaxy Store](https://galaxystore.samsung.com/detail/com.samsung.android.app.routineplus) or [Good Lock](https://galaxystore.samsung.com/detail/com.samsung.android.goodlock). Then, go to Settings > Modes and Routines to create routines that launch MiCTS by Button action such as long-pressing the power button.
-   
+Android 13+; setup is specific to Samsung One UI. The Binder wire format is checked against AOSP Android 13–17 and Samsung S23 Android 16 / S24 Android 17 frameworks. Google and firmware support still determine actual availability. See [validation](docs/VALIDATION.md).
 
-## Settings
+This fork removes Xposed/LSPosed hooks, module metadata, device spoofing and all associated dependencies, including `hiddenapibypass`. It uses the system Binder protocol without hidden-API exemptions. It cannot guarantee how other applications classify a device.
 
-### How to enter Settings
-- Long press the MiCTS app icon to show the Settings option, then click to enter
-- From the Modules page in LSPosed, click MiCTS, then click the settings icon to enter
-- Long press the Quick Settings panel tile to enter
+Only `WRITE_SECURE_SETTINGS` and `RECEIVE_BOOT_COMPLETED` are explicitly requested. The app backs up the assistant, voice interaction service and navigation flags before changing them. Startup recovery runs once with a single delayed recheck. There is no GMS policy override or network proxy in this app.
 
-### App Settings
-- Default trigger delay: The delay when triggering by launching MiCTS
-- Tile trigger delay: The delay when triggering by the Quick Settings panel tile
+## Build and license
 
-### Module Settings
-Need to activate the module in LSPosed
-- System trigger service: The system service used by triggering. Only the services supported will be shown. Need to add System Framework to the scope in LSPosed
-   - VIS: Supports on Android 9-16. Need to set Google as the default assistant app and the screen edge will flash when triggering for some devices. If the module is not activated, only this service will be used
-   - CSHelper: Supports on Android 14 QPR3 and above. Don’t need to set Google as the default assistant app and the screen edge will not flash when triggering
-   - CSService: Supports on Android 15 and above. A dedicated service for Circle to Search, same effect as CSHelper
+Use JDK 17 and Android SDK 36:
 
+```sh
+./gradlew :app:assembleDebug :app:lintDebug
+```
 
-- Trigger by long press gesture handle: Only supports on Xiaomi devices. Need to add System Launcher/POCO Launcher to the scope in LSPosed
+Debug APKs are under `app/build/outputs/apk/debug/`. Use a stable private signing key for releases; do not commit signing keys or passwords. CI uploads debug artifacts without publishing releases.
 
-
-- Trigger by long press home button: Only supports on Xiaomi devices. Need to add System Framework to the scope in LSPosed
-
-
-- Device spoof for Google: Need to add Google to the scope in LSPosed
-   - Manufacturer: Modify the `ro.product.manufacturer` value that Google reads
-   - Brand: Modify the `ro.product.brand` value that Google reads
-   - Model: Modify the `ro.product.model` value that Google reads
-   - Device: Modify the `ro.product.device` value that Google reads
-
-## FAQ
-
-### Prompt "Trigger failed!"
-
-Most likely because Google is not set as the default assistant, check it
-
-### Google assistant appears instead of Circle to Search
-
-Ensure that Google is the latest version
-
-### Sometimes it doesn't trigger successfully, and the interface appears only after opening Google
-
-This is likely due to the tombstone mechanism. Check if your device has related settings and add Google to the whitelist, such as selecting "No restrictions" in battery saver
-
-This issue should not occur when the `System trigger service` is set to `CSHelper` in the Module Settings
-
-## Translation Contributing
-
-You can contribute translation through [Crowdin](https://crowdin.com/project/micts)
-
-If you need to contribute a new language, please submit an issue first
-
-## Star History
-
-<a href="https://star-history.com/#parallelcc/micts&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=parallelcc/micts&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=parallelcc/micts&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=parallelcc/micts&type=Date" />
- </picture>
-</a>
+The original Circle to Search invocation approach, tile and some resources come from MiCTS by parallelcc. Samsung-specific setup and recovery are added by this fork. Upstream Git history and [GPL-3.0](LICENSE) are retained. Distributions must include the corresponding source and license.
