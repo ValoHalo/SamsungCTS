@@ -4,6 +4,7 @@ kotlin = "2.3.20"
 lifecycle = "2.10.0"
 activity = "1.13.0"
 compose-bom = "2026.03.01"
+shizuku = "13.1.5"
 
 [libraries]
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -12,6 +13,7 @@ compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-
 material3 = { module = "androidx.compose.material3:material3" }
 androidx-ui = { module = "androidx.compose.ui:ui" }
 androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

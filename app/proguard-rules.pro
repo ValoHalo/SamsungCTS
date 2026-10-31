@@ -1,2 +1,3 @@
 -repackageclasses
 -allowaccessmodification
+-checkdiscard class rikka.sui.**

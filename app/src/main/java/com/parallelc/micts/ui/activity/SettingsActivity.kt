@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.parallelc.micts.BuildConfig
 import com.parallelc.micts.LaunchTileService
 import com.parallelc.micts.R
+import com.parallelc.micts.permission.ShizukuGrant
 import com.parallelc.micts.samsung.SamsungSetup
 import com.parallelc.micts.ui.theme.MiCTSTheme
 import java.text.DateFormat
@@ -37,22 +38,25 @@ import java.util.Date
 
 class SettingsActivity : ComponentActivity() {
     private var refreshVersion by mutableIntStateOf(0)
+    private lateinit var shizuku: ShizukuGrant
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         actionBar?.hide()
+        shizuku = ShizukuGrant(this) { refreshVersion++ }
         enableEdgeToEdge()
         setContent {
             MiCTSTheme {
-                SetupScreen(refreshVersion, intent.getBooleanExtra("trigger_error", false)) { refreshVersion++ }
+                SetupScreen(refreshVersion, intent.getBooleanExtra("trigger_error", false), shizuku) { refreshVersion++ }
             }
         }
     }
     override fun onResume() { super.onResume(); refreshVersion++ }
+    override fun onDestroy() { shizuku.close(); super.onDestroy() }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SetupScreen(refreshVersion: Int, triggerError: Boolean, refresh: () -> Unit) {
+private fun SetupScreen(refreshVersion: Int, triggerError: Boolean, shizuku: ShizukuGrant, refresh: () -> Unit) {
     val context = LocalContext.current
     val resources = LocalResources.current
     val permission = remember(refreshVersion) { SamsungSetup.authorized(context) }
@@ -66,6 +70,8 @@ private fun SetupScreen(refreshVersion: Int, triggerError: Boolean, refresh: () 
     val legacy = remember(refreshVersion) { SamsungSetup.packagePresent(context, "dev.oscopex.searchgesture") }
     var feedback by rememberSaveable { mutableStateOf("") }
     var confirmRestore by rememberSaveable { mutableStateOf(false) }
+    var showAdb by rememberSaveable { mutableStateOf(false) }
+    val shizukuRunning = remember(refreshVersion) { shizuku.running() }
     val command = "adb shell pm grant ${context.packageName} android.permission.WRITE_SECURE_SETTINGS"
     fun open(intent: Intent) {
         runCatching { context.startActivity(intent) }.onFailure { feedback = resources.getString(R.string.open_failed) }
@@ -108,14 +114,30 @@ private fun SetupScreen(refreshVersion: Int, triggerError: Boolean, refresh: () 
             }
             if (triggerError) Text(stringResource(R.string.trigger_failed_help), color = MaterialTheme.colorScheme.error)
             if (feedback.isNotEmpty()) Text(feedback, style = MaterialTheme.typography.bodyMedium)
+            if (shizuku.message.isNotEmpty()) Text(shizuku.message, style = MaterialTheme.typography.bodyMedium)
             if (lastError.isNotEmpty()) Text(lastError, color = MaterialTheme.colorScheme.error)
             if (!permission) {
                 SetupCard(R.string.permission_title, R.string.permission_body) {
-                    Text(command, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = {
-                        context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("ADB", command))
-                        feedback = resources.getString(R.string.command_copied)
-                    }) { Text(stringResource(R.string.copy_command)) }
+                    Text(stringResource(if (shizukuRunning) R.string.shizuku_ready else R.string.shizuku_not_running))
+                    if (shizukuRunning) {
+                        Button(onClick = { shizuku.request() }, enabled = !shizuku.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                            Text(stringResource(if (shizuku.busy) R.string.shizuku_working else R.string.shizuku_authorize))
+                        }
+                    } else {
+                        OutlinedButton(onClick = {
+                            val manager = context.packageManager.getLaunchIntentForPackage("moe.shizuku.privileged.api")
+                            if (manager != null) open(manager) else feedback = resources.getString(R.string.shizuku_install)
+                        }) { Text(stringResource(R.string.shizuku_open)) }
+                    }
+                    TextButton(onClick = { showAdb = !showAdb }) { Text(stringResource(R.string.adb_alternative)) }
+                    if (showAdb) {
+                        Text(command, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+                        TextButton(onClick = {
+                            context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("ADB", command))
+                            feedback = resources.getString(R.string.command_copied)
+                        }) { Text(stringResource(R.string.copy_command)) }
+                    }
                 }
             }
             if (!background) {

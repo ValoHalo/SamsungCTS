@@ -33,6 +33,9 @@ object SamsungSetup {
         (Settings.Global.getInt(c.contentResolver, NAV_FLAGS, 0) and 8) != 0
     fun lastError(c: Context) = prefs(c).getString("last_error", "").orEmpty()
     fun lastBoot(c: Context) = prefs(c).getLong("last_boot", 0)
+    fun clearRecoveredError(c: Context) {
+        if (authorized(c) && configured(c)) prefs(c).edit().remove("last_error").apply()
+    }
 
     private fun snapshot(editor: SharedPreferences.Editor, key: String, value: String?) {
         editor.putBoolean("${key}_null", value == null).putString(key, value.orEmpty())

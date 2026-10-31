@@ -7,6 +7,7 @@ FORBIDDEN = (
     b"org/lsposed/", b"org.lsposed.", b"io/github/libxposed/", b"io.github.libxposed.",
     b"de/robv/android/xposed/", b"de.robv.android.xposed.", b"META-INF/xposed/",
     b"HiddenApiBypass", b"XposedModule", b"com/topjohnwu/", b"com.topjohnwu.",
+    b"rikka/sui/", b"rikka.sui.", b"libsui.so",
 )
 
 def inspect(path: Path) -> None:
