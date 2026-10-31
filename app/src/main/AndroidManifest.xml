@@ -1,53 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <application
-        android:name=".MainApplication"
-        android:description="@string/xposed_description"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:supportsRtl="true">
-        <activity
-            android:name=".ui.activity.SettingsActivity"
-            android:exported="true"
-            android:label="@string/title_activity_settings"
-            android:noHistory="true" >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!-- This development permission is granted once by ADB, not requested at runtime. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+    <queries>
+        <package android:name="com.google.android.googlequicksearchbox" />
+        <package android:name="dev.oscopex.searchgesture" />
+        <package android:name="moe.shizuku.privileged.api" />
+    </queries>
+    <application android:icon="@mipmap/ic_launcher" android:label="@string/app_name"
+        android:allowBackup="false" android:supportsRtl="true">
+        <meta-data android:name="moe.shizuku.client.V3_SUPPORT" android:value="true" />
+        <!-- Receive only the Shizuku binder; do not initialize any other backend. -->
+        <provider android:name=".permission.ShizukuBridgeProvider"
+            android:authorities="${applicationId}.shizuku" android:exported="true"
+            android:multiprocess="false" android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+        <activity android:name=".ui.activity.SettingsActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES"/>
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".ui.activity.MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.App.Transparent"
-            android:noHistory="true"
-            android:excludeFromRecents="true" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
-        </activity>
-
-        <service
-            android:name=".LaunchTileService"
-            android:exported="true"
-            android:icon="@drawable/ic_tile_service"
-            android:label="@string/tile_label"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
+        </activity>
+        <activity android:name=".ui.activity.MainActivity" android:exported="true"
+            android:theme="@style/Theme.App.Transparent" android:noHistory="true"
+            android:excludeFromRecents="true" />
+        <service android:name=".LaunchTileService" android:exported="true"
+            android:icon="@drawable/ic_tile_service" android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
         </service>
+        <receiver android:name=".samsung.BootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

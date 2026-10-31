@@ -1,107 +1,64 @@
+/* Based on MiCTS by parallelcc; Samsung adaptation by ValoHalo.
+ * SPDX-License-Identifier: GPL-3.0-only */
 package com.parallelc.micts.ui.activity
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.media.AudioAttributes
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.Parcel
 import android.os.SystemClock
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
-import com.parallelc.micts.BuildConfig
-import com.parallelc.micts.R
-import com.parallelc.micts.config.AppConfig.CONFIG_NAME
-import com.parallelc.micts.config.AppConfig.DEFAULT_CONFIG
-import com.parallelc.micts.config.AppConfig.KEY_ASYNC_TRIGGER
-import com.parallelc.micts.config.AppConfig.KEY_DEFAULT_DELAY
-import com.parallelc.micts.config.AppConfig.KEY_TILE_DELAY
-import com.parallelc.micts.config.AppConfig.KEY_VIBRATE
-import com.parallelc.micts.module
+import com.parallelc.micts.samsung.SamsungSetup
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.lsposed.hiddenapibypass.HiddenApiBypass
-
-const val LOG_TAG = BuildConfig.APP_NAME
 
 @SuppressLint("PrivateApi")
-fun triggerCircleToSearch(entryPoint: Int, context: Context?, vibrate: Boolean): Boolean {
-    val result =  runCatching {
-        val bundle = Bundle()
-        if (BuildConfig.APP_NAME == "MiCTS") {
-            bundle.putLong("invocation_time_ms", SystemClock.elapsedRealtime())
-            bundle.putInt("omni.entry_point", entryPoint)
-            bundle.putBoolean("micts_trigger", true)
-        }
-        val iVimsClass = Class.forName("com.android.internal.app.IVoiceInteractionManagerService")
-        val vis = Class.forName("android.os.ServiceManager").getMethod("getService", String::class.java).invoke(null, "voiceinteraction")
-        val vims = Class.forName("com.android.internal.app.IVoiceInteractionManagerService\$Stub").getMethod("asInterface", IBinder::class.java).invoke(null, vis)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            HiddenApiBypass.invoke(iVimsClass, vims, "showSessionFromSession", null, bundle, 7, "hyperOS_home") as Boolean
-        } else {
-            HiddenApiBypass.invoke(iVimsClass, vims, "showSessionFromSession", null, bundle, 7) as Boolean
-        }
-    }.onFailure { e ->
-        val errMsg = "triggerCircleToSearch invoke omni failed: " + e.stackTraceToString()
-        module?.log(Log.ERROR, LOG_TAG, errMsg) ?: Log.e(LOG_TAG, errMsg)
-    }.getOrDefault(false)
-    if (result && vibrate && context != null) {
-        runCatching {
-            (context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator).run {
-                val attr = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-                    .setFlags(128)
-                    .build()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK), attr)
-                } else {
-                    vibrate(longArrayOf(0, 1, 75, 76), -1, attr)
-                }
-            }
-        }.onFailure { e ->
-            val errMsg = "triggerCircleToSearch vibrate failed: " + e.stackTraceToString()
-            module?.log(Log.ERROR, LOG_TAG, errMsg) ?: Log.e(LOG_TAG, errMsg)
-        }
+fun triggerCircleToSearch(): Boolean = runCatching {
+    val arguments = Bundle().apply {
+        putLong("invocation_time_ms", SystemClock.elapsedRealtime())
+        putInt("omni.entry_point", 1)
     }
-    return result
-}
+    val binder = Class.forName("android.os.ServiceManager")
+        .getMethod("getService", String::class.java).invoke(null, "voiceinteraction") as? IBinder
+        ?: return@runCatching false
+    // AOSP Android 13–17 and the tested Samsung framework use transaction 3.
+    // Android 14 added attributionTag. Keep this protocol scoped and fail closed.
+    if (Build.VERSION.SDK_INT !in 33..37) return@runCatching false
+    val data = Parcel.obtain()
+    val reply = Parcel.obtain()
+    try {
+        data.writeInterfaceToken("com.android.internal.app.IVoiceInteractionManagerService")
+        data.writeStrongBinder(null)
+        data.writeTypedObject(arguments, 0)
+        data.writeInt(7)
+        if (Build.VERSION.SDK_INT >= 34) data.writeString("SamsungCTS")
+        if (!binder.transact(3, data, reply, 0)) return@runCatching false
+        reply.readException()
+        reply.readBoolean()
+    } finally {
+        reply.recycle()
+        data.recycle()
+    }
+}.onFailure { Log.e("SamsungCTS", "Circle to Search invocation failed", it) }.getOrDefault(false)
 
 class MainActivity : ComponentActivity() {
-    suspend fun delayAndTrigger(delayMs: Long, vibrate: Boolean) {
-        if (delayMs > 0) {
-            delay(delayMs)
-        }
-        if (!triggerCircleToSearch(1, this, vibrate)) {
-            Toast.makeText(this, getString(R.string.trigger_failed), Toast.LENGTH_SHORT).show()
-        }
-        finish()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.isNavigationBarContrastEnforced = false
-        }
-        val prefs = getSharedPreferences(CONFIG_NAME, MODE_PRIVATE)
-        val key = if (intent.getBooleanExtra("from_tile", false)) KEY_TILE_DELAY else KEY_DEFAULT_DELAY
-        val delayMs = prefs.getLong(key, DEFAULT_CONFIG[key] as Long)
-        val vibrate = prefs.getBoolean(KEY_VIBRATE, DEFAULT_CONFIG[KEY_VIBRATE] as Boolean)
-
-        if (prefs.getBoolean(KEY_ASYNC_TRIGGER, DEFAULT_CONFIG[KEY_ASYNC_TRIGGER] as Boolean)) {
-            lifecycleScope.launch {
-                delayAndTrigger(delayMs, vibrate)
+        window.isNavigationBarContrastEnforced = false
+        lifecycleScope.launch {
+            if (SamsungSetup.enabled(this@MainActivity) && !SamsungSetup.configured(this@MainActivity)) {
+                SamsungSetup.apply(this@MainActivity, "launch")
+                delay(250)
             }
-        } else {
-            runBlocking {
-                delayAndTrigger(delayMs, vibrate)
+            delay(if (intent.getBooleanExtra("from_tile", false)) 400 else 80)
+            if (!triggerCircleToSearch()) {
+                startActivity(Intent(this@MainActivity, SettingsActivity::class.java).putExtra("trigger_error", true))
             }
+            finish()
         }
     }
 }
